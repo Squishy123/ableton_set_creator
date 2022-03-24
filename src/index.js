@@ -25,7 +25,7 @@ if (!fs.existsSync(output_als)) {
 }
 
 // offset between in beats
-let track_offset = 20
+let track_offset = 500
 
 async function main() {
     let main_locators = []
@@ -76,8 +76,6 @@ async function main() {
         //console.log(locators)
         //console.log(time_signatures)
         //console.log(end)
-
-        //exit()
         
         main_locators.push(locators)
         main_time_signatures.push(time_signatures)
@@ -85,13 +83,13 @@ async function main() {
     }
 
     // Concat Metadata
-    let current_offset = 0;
 
     let final_locators = []
     let final_time_signatures = []
 
-    let taken_ids = {"0": 1}
-    let largest_id = 0
+    let taken_loc_ids = {"0": 1}
+    let largest_loc_id = 0
+    let current_offset = 0;
 
     for (let i = 0; i < main_locators.length; i++) {
         let locators = main_locators[i]
@@ -99,16 +97,16 @@ async function main() {
             let current_locator = locators[j]
             
             // assigning new ids
-            console.log(taken_ids[current_locator['$']["Id"]])
+            console.log(taken_loc_ids[current_locator['$']["Id"]])
 
-            while (taken_ids[current_locator['$']["Id"]]) {
-                current_locator['$']["Id"] = largest_id + 1
+            while (taken_loc_ids[current_locator['$']["Id"]]) {
+                current_locator['$']["Id"] = largest_loc_id + 1
             }
 
-           taken_ids[current_locator['$']["Id"]] = 1
+           taken_loc_ids[current_locator['$']["Id"]] = 1
 
-            if (current_locator['$']["Id"] > largest_id) {
-                largest_id = current_locator['$']["Id"]
+            if (current_locator['$']["Id"] > largest_loc_id) {
+                largest_loc_id = current_locator['$']["Id"]
             }
 
             current_locator["Time"]['$']["Value"] = Number(current_locator["Time"]['$']["Value"]) + current_offset
@@ -118,6 +116,44 @@ async function main() {
         console.log(current_offset)
     }
     console.log(final_locators)
+
+    let taken_tim_ids = {"0": 1}
+    let largest_tim_id = 0
+    current_offset = 0;
+
+    console.log(main_time_signatures)
+
+    for (let i = 0; i < main_time_signatures.length; i++) {
+        let signatures = main_time_signatures[i]
+        for (let j = 0; j < main_time_signatures[i].length; j++) {
+            let current_signature = signatures[j]
+            console.log(current_signature)
+            
+            // assigning new ids
+            console.log(taken_tim_ids[current_signature['$']["Id"]])
+
+            while (taken_tim_ids[current_signature['$']["Id"]]) {
+                current_signature['$']["Id"] = largest_tim_id + 1
+            }
+
+            taken_tim_ids[current_signature['$']["Id"]] = 1
+
+            if (current_signature['$']["Id"] > largest_tim_id) {
+                largest_tim_id = Number(current_signature['$']["Id"])
+            }
+            
+            current_signature['$']["Time"] = Number(current_signature["$"]["Time"]) + current_offset
+
+            if (Number(current_signature['$']["Time"]) < 0) {
+                current_signature['$']["Time"] =  current_offset
+            }
+
+            final_time_signatures.push(current_signature)
+        }
+        current_offset += Number(main_ends[i]) + Number(track_offset)
+        console.log(current_offset)
+    }
+    console.log(final_time_signatures)
 
     // Build XML
     console.log(output_als)
@@ -145,6 +181,8 @@ async function main() {
     }
 
     xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"] = final_locators
+
+    xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = final_time_signatures
 
     let xml = new xml2js.Builder({headless: false, explicitArray: false, mergeAttrs: false , explicitCharkey: true}).buildObject(xml_obj)
     out_data = await zlib.gzipSync(xml)
