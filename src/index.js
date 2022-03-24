@@ -25,7 +25,7 @@ if (!fs.existsSync(output_als)) {
 }
 
 // offset between in beats
-let track_offset = 500
+let track_offset = 100
 
 async function main() {
     let main_locators = []
@@ -97,7 +97,7 @@ async function main() {
             let current_locator = locators[j]
             
             // assigning new ids
-            console.log(taken_loc_ids[current_locator['$']["Id"]])
+            //console.log(taken_loc_ids[current_locator['$']["Id"]])
 
             while (taken_loc_ids[current_locator['$']["Id"]]) {
                 current_locator['$']["Id"] = largest_loc_id + 1
@@ -113,24 +113,24 @@ async function main() {
             final_locators.push(current_locator)
         }
         current_offset += Number(main_ends[i]) + Number(track_offset)
-        console.log(current_offset)
+        //console.log(current_offset)
     }
-    console.log(final_locators)
+    //console.log(final_locators)
 
     let taken_tim_ids = {"0": 1}
     let largest_tim_id = 0
     current_offset = 0;
 
-    console.log(main_time_signatures)
+    //console.log(main_time_signatures)
 
     for (let i = 0; i < main_time_signatures.length; i++) {
         let signatures = main_time_signatures[i]
         for (let j = 0; j < main_time_signatures[i].length; j++) {
             let current_signature = signatures[j]
-            console.log(current_signature)
+            //console.log(current_signature)
             
             // assigning new ids
-            console.log(taken_tim_ids[current_signature['$']["Id"]])
+            //console.log(taken_tim_ids[current_signature['$']["Id"]])
 
             while (taken_tim_ids[current_signature['$']["Id"]]) {
                 current_signature['$']["Id"] = largest_tim_id + 1
@@ -151,9 +151,9 @@ async function main() {
             final_time_signatures.push(current_signature)
         }
         current_offset += Number(main_ends[i]) + Number(track_offset)
-        console.log(current_offset)
+        //console.log(current_offset)
     }
-    console.log(final_time_signatures)
+    //console.log(final_time_signatures)
 
     // Build XML
     console.log(output_als)
