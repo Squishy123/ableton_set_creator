@@ -1,0 +1,17 @@
+{
+  "name": "ableton_set_builder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^10.0.1",
+    "xml2js": "^0.4.23",
+    "xmlbuilder2": "^3.0.2"
+  }
+}
