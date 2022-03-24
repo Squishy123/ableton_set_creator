@@ -7,7 +7,7 @@ const xml2js = require('xml2js')
 const { create, convert } = require('xmlbuilder2')
 
 // songs to pass in (input_filename, input_filename, input_filename)
-let input_als = [path.join(`${__dirname}`, "../", "test_single_Project/test_single.als"), path.join(`${__dirname}`, "../", "test_single_Project/test_multi.als"),]
+let input_als = [path.join(`${__dirname}`, "../", "test_single_Project/test_single.als"), path.join(`${__dirname}`, "../", "test_multi_Project/test_multi.als"),]
 // check exists
 /*
 for (let i = 0; i < input_als.length; i++) {
@@ -27,7 +27,7 @@ if (!fs.existsSync(output_als)) {
 }
 
 // offset between in beats
-let track_offset = 100
+let track_offset = 200
 
 async function main() {
     let main_locators = []
@@ -40,7 +40,7 @@ async function main() {
         console.log(input_als[i])
 
         // decompress als
-        let data = fs.readFileSync(input_als[0])
+        let data = fs.readFileSync(input_als[i])
         data = await zlib.unzipSync(data)
 
         let parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: false, explicitCharkey: true })
@@ -227,7 +227,8 @@ async function main() {
 
         for (let j = 0; j < main_tracks[i].length; j++) {
             let current_track = track[j]
-            while (taken_tra_ids[track['$']["Id"]]) {
+            console.log(current_track['$']['Id'])
+            while (taken_tra_ids[current_track['$']['Id']]) {
                 current_track['$']["Id"] = largest_tra_id + 1
             }
 
