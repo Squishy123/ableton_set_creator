@@ -1,17 +1,13 @@
-const util = require('util')
 const fs = require('fs-extra')
 const { exit } = require('process')
 const path = require('path')
 const zlib = require('zlib')
 const xml2js = require('xml2js')
-const { create, convert } = require('xmlbuilder2')
 
+// use this to put an empty loop locator block
 const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_project/sample_loop.als")
 
 // songs to pass in (input_filename, input_filename, input_filename)
-//[path.join(`${__dirname}`, "../", "test_project/test_a.als"), path.join(`${__dirname}`, "../", "test_project/test_b.als"), ]
-//let input_als = [path.join(`${__dirname}`, "../", "test_project/test_a.als"), "C:/Users/Chris/Desktop/Build My Life - D - 72bpm Project/Build My Life - D - 72bpm.als"] 
-//let input_als = [path.join(`${__dirname}`, "../", "a_proj/a.als"), path.join(`${__dirname}`, "../", "a_proj/b.als")]
 let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
 
 // check exists
@@ -22,6 +18,7 @@ for (let i = 0; i < input_als.length; i++) {
     }
 }
 
+// name of exported file
 let output_als = "mix.als"
 
 // output template
