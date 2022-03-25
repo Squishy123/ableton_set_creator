@@ -8,7 +8,10 @@ const { create, convert } = require('xmlbuilder2')
 
 // songs to pass in (input_filename, input_filename, input_filename)
 //[path.join(`${__dirname}`, "../", "test_project/test_a.als"), path.join(`${__dirname}`, "../", "test_project/test_b.als"), ]
-let input_als = [path.join(`${__dirname}`, "../", "test_project/test_a.als"), "C:/Users/Chris/Desktop/Build My Life - D - 72bpm Project/Build My Life - D - 72bpm.als"] 
+//let input_als = [path.join(`${__dirname}`, "../", "test_project/test_a.als"), "C:/Users/Chris/Desktop/Build My Life - D - 72bpm Project/Build My Life - D - 72bpm.als"] 
+//let input_als = [path.join(`${__dirname}`, "../", "a_proj/a.als"), path.join(`${__dirname}`, "../", "a_proj/b.als")]
+let input_als = ["C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
+
 // check exists
 for (let i = 0; i < input_als.length; i++) {
     if (!fs.existsSync(input_als[i])) {
@@ -26,7 +29,8 @@ if (!fs.existsSync(output_als)) {
 }
 
 // offset between in beats
-let track_offset = 200
+let TRACK_OFFSET = 50
+const START_OFFSET = 4 * 10
 
 async function main() {
     let main_locators = []
@@ -90,14 +94,23 @@ async function main() {
 
     let taken_loc_ids = { "0": 1 }
     let largest_loc_id = 0
-    let current_offset = 0;
+    let current_offset = START_OFFSET;
 
     for (let i = 0; i < main_locators.length; i++) {
         let locators = main_locators[i]
         if (!locators)
             continue
+
+        let lowest_val = 100000
+        let lowest_index = 0
+
         for (let j = 0; j < main_locators[i].length; j++) {
             let current_locator = locators[j]
+
+            if (Number(current_locator["Time"]["$"]["Value"]) < lowest_val) {
+                lowest_index = final_locators.length
+                lowest_val = Number(current_locator["Time"]["$"]["Value"])
+            }
 
             // assigning new ids
             //console.log(taken_loc_ids[current_locator['$']["Id"]])
@@ -115,8 +128,10 @@ async function main() {
             current_locator["Time"]['$']["Value"] = Number(current_locator["Time"]['$']["Value"]) + current_offset
             final_locators.push(current_locator)
         }
-        current_offset += Number(main_ends[i]) + Number(track_offset)
+        current_offset += Number(main_ends[i]) + Number(TRACK_OFFSET)
         //console.log(current_offset)
+        console.log(lowest_index)
+        final_locators[lowest_index]["Name"]["$"]["Value"] = `START ${path.basename(input_als[i])}: ${final_locators[lowest_index]["Name"]["$"]["Value"]}`
     }
     //console.log(final_locators)
 
@@ -153,7 +168,7 @@ async function main() {
 
             final_time_signatures.push(current_signature)
         }
-        current_offset += Number(main_ends[i]) + Number(track_offset)
+        current_offset += Number(main_ends[i]) + Number(TRACK_OFFSET)
         //console.log(current_offset)
     }
     //console.log(final_time_signatures)
@@ -176,16 +191,26 @@ async function main() {
     let params = ["Ableton", "LiveSet", "Locators", "Locators", "Locator"]
 
     if (!xml_obj["Ableton"]["LiveSet"]["Locators"]) {
-        xml_obj["Ableton"]["LiveSet"]["Locators"] = {}
-    }
-
-    if (!xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]) {
         xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"] = {}
     }
 
     xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"] = final_locators
 
-    xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = final_time_signatures
+    if (!xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]) {
+        xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"] = {
+            "AutomationEnvelope": [
+                {
+                    "Automation": {
+                        "Events": {
+                            "EnumEvent": []
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].concat(xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"], final_time_signatures)
 
     let xml = new xml2js.Builder({ headless: false, explicitArray: false, mergeAttrs: false, explicitCharkey: true }).buildObject(xml_obj)
     out_data = await zlib.gzipSync(xml)
