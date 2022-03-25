@@ -15,7 +15,9 @@ npm i
 *all in src/index.js
 - input_als is the string paths of .als files with locators and time signatures you want to add to the set (in order).
 - Use the LOOP_ALS const to have an empty block
-- output_als is the string path of the exported .als file
+- output_als (default=mix.als) is the string path of the exported .als file
+- TRACK_OFFSET (default=100) is the offset between set tracks in beats
+- START_OFFSET (default=400) is the offset from the start of the file
 
 ### To Run the Script
 ```
