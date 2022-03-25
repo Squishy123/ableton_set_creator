@@ -6,11 +6,13 @@ const zlib = require('zlib')
 const xml2js = require('xml2js')
 const { create, convert } = require('xmlbuilder2')
 
+const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_project/sample_loop.als")
+
 // songs to pass in (input_filename, input_filename, input_filename)
 //[path.join(`${__dirname}`, "../", "test_project/test_a.als"), path.join(`${__dirname}`, "../", "test_project/test_b.als"), ]
 //let input_als = [path.join(`${__dirname}`, "../", "test_project/test_a.als"), "C:/Users/Chris/Desktop/Build My Life - D - 72bpm Project/Build My Life - D - 72bpm.als"] 
 //let input_als = [path.join(`${__dirname}`, "../", "a_proj/a.als"), path.join(`${__dirname}`, "../", "a_proj/b.als")]
-let input_als = ["C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
+let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
 
 // check exists
 for (let i = 0; i < input_als.length; i++) {
@@ -20,16 +22,21 @@ for (let i = 0; i < input_als.length; i++) {
     }
 }
 
-// output_filename
-let output_als = path.join(`${__dirname}`, "../", "/test_out/template_10.als")
-// check exists
-if (!fs.existsSync(output_als)) {
-    fs.copySync(path.join(`${__dirname}`, "../", "/template_10/"), "test_out/")
-    output_als = path.join(`${__dirname}`, "../", "/test_out/template_10.als")
-}
+let output_als = "mix.als"
 
-// offset between in beats
-let TRACK_OFFSET = 50
+// output template
+let output_template = path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
+// check exists
+/*
+if (!fs.existsSync(output_template)) {
+    fs.copySync(path.join(`${__dirname}`, "../", "/template_10/"), "test_out/")
+    output_template = path.join(`${__dirname}`, "../", "/test_out/template_10.als")
+}*/
+
+// offset between tracks in beats
+let TRACK_OFFSET = 100
+
+// offset from the start of the file
 const START_OFFSET = 4 * 10
 
 async function main() {
@@ -64,6 +71,7 @@ async function main() {
 
         try {
             // if multiple
+            /* WIP TRACK END
             if (tracks.length) {
                 tracks.forEach(t => {
                     let t_end = t["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]["CurrentEnd"]['$']["Value"]
@@ -73,7 +81,18 @@ async function main() {
                 });
             } else {
                 end = tracks["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]["CurrentEnd"]['$']["Value"]
+            } */
+            //For now we use end locator
+            let last_index = 0
+            let last_value = -100
+            for (let j = 0; j < locators.length; j++) {
+                if (Number(locators[j]["Time"]["$"]["Value"]) > last_value) {
+                    last_value = Number(locators[j]["Time"]["$"]["Value"])
+                    last_index = j
+                }
             }
+
+            end = last_value
         } catch (e) {
             //console.error(e)
         }
@@ -130,7 +149,6 @@ async function main() {
         }
         current_offset += Number(main_ends[i]) + Number(TRACK_OFFSET)
         //console.log(current_offset)
-        console.log(lowest_index)
         final_locators[lowest_index]["Name"]["$"]["Value"] = `START ${path.basename(input_als[i])}: ${final_locators[lowest_index]["Name"]["$"]["Value"]}`
     }
     //console.log(final_locators)
@@ -174,8 +192,8 @@ async function main() {
     //console.log(final_time_signatures)
 
     // Build XML
-    console.log(output_als)
-    let data = fs.readFileSync(output_als)
+    console.log(output_template)
+    let data = fs.readFileSync(output_template)
     data = await zlib.unzipSync(data)
     /*
     const obj = convert(data.toString(), {format: "object"})
@@ -215,7 +233,7 @@ async function main() {
     let xml = new xml2js.Builder({ headless: false, explicitArray: false, mergeAttrs: false, explicitCharkey: true }).buildObject(xml_obj)
     out_data = await zlib.gzipSync(xml)
     //console.log(xml)
-    fs.writeFileSync("mix.als", out_data)
+    fs.writeFileSync(output_als, out_data)
 }
 
 main()
