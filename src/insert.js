@@ -57,9 +57,9 @@ async function main() {
 
     let t_locators = t_xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"].map(a => {
         return Number(a['Time']['$']['Value'])
-    })
+    }).sort((a,b) => a-b)
 
-    //console.log(t_locators)
+    console.log(t_locators)
 
     // Extract Metadata
     for (let i = 0; i < input_als.length; i++) {
