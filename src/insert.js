@@ -8,7 +8,13 @@ const xml2js = require('xml2js')
 const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_project/sample_loop.als")
 
 // songs to pass in (input_filename, input_filename, input_filename)
-let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
+//let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
+let input_als = [
+    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
+    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
+    "C:/Users/Chris/Desktop/projects/ableton_set_creator/Come-to-the-altar-D+.als",
+    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Desert-Song-D-110.00bpm.als"
+]
 
 // check exists
 for (let i = 0; i < input_als.length; i++) {
@@ -22,7 +28,7 @@ for (let i = 0; i < input_als.length; i++) {
 let output_als = "mix.als"
 
 // output template
-let output_template = path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
+let output_template = "C:/Users/Chris/Desktop/projects/ableton_set_creator/April-3rd-backup.als"//path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
 
 // check exists
 /*
@@ -52,6 +58,8 @@ async function main() {
     let t_locators = t_xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"].map(a => {
         return Number(a['Time']['$']['Value'])
     })
+
+    //console.log(t_locators)
 
     // Extract Metadata
     for (let i = 0; i < input_als.length; i++) {
@@ -144,7 +152,7 @@ async function main() {
             //console.log(taken_loc_ids[current_locator['$']["Id"]])
 
             while (taken_loc_ids[current_locator['$']["Id"]]) {
-                current_locator['$']["Id"] = largest_loc_id + 1
+                current_locator['$']["Id"] = Number(largest_loc_id) + 1
             }
 
             taken_loc_ids[current_locator['$']["Id"]] = 1
@@ -225,6 +233,8 @@ async function main() {
     if (!xml_obj["Ableton"]["LiveSet"]["Locators"]) {
         xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"] = {}
     }
+
+    //console.log(xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"])
 
     xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"] = final_locators
 
