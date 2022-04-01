@@ -158,7 +158,7 @@ async function main() {
 
     for (let i = 0; i < main_time_signatures.length; i++) {
         let signatures = main_time_signatures[i]
-        if (!signatures.length)
+        if (!signatures || !signatures.length)
             continue
         for (let j = 0; j < main_time_signatures[i].length; j++) {
             let current_signature = signatures[j]
