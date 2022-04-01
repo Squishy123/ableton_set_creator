@@ -168,7 +168,7 @@ async function main() {
 
     //console.log(main_time_signatures)
 
-    main_time_signatures[2] = null
+    //main_time_signatures[2] = null
 
     for (let i = 0; i < main_time_signatures.length; i++) {
         let signatures = main_time_signatures[i]
