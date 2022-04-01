@@ -49,7 +49,9 @@ async function main() {
     let t_parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: false, explicitCharkey: true })
     let t_xml_obj = await t_parser.parseStringPromise(t_data.toString())
 
-    let t_locators = t_xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"].map(a => (Number(a['Time']['$']['Value'])))
+    let t_locators = t_xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"].map(a => {
+        return Number(a['Time']['$']['Value'])
+    })
 
     // Extract Metadata
     for (let i = 0; i < input_als.length; i++) {
@@ -166,9 +168,12 @@ async function main() {
 
     //console.log(main_time_signatures)
 
+    main_time_signatures[2] = null
+
     for (let i = 0; i < main_time_signatures.length; i++) {
         let signatures = main_time_signatures[i]
-        if (!signatures.length)
+
+        if (!signatures || signatures.length)
             continue
         for (let j = 0; j < main_time_signatures[i].length; j++) {
             let current_signature = signatures[j]
