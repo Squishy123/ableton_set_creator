@@ -9,7 +9,6 @@ const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_projec
 
 // songs to pass in (input_filename, input_filename, input_filename)
 //let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
-
 let input_als = [
     "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
     "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
@@ -21,15 +20,16 @@ let input_als = [
 for (let i = 0; i < input_als.length; i++) {
     if (!fs.existsSync(input_als[i])) {
         console.log(`ERROR: Input .als does not exist: ${input_als[0]}`)
-        exit(1);
+        //exit(1);
     }
 }
 
 // name of exported file
-let output_als = "mix_n.als"
+let output_als = "mix.als"
 
 // output template
 let output_template = "C:/Users/Chris/Desktop/projects/ableton_set_creator/April-3rd-backup.als"//path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
+
 // check exists
 /*
 if (!fs.existsSync(output_template)) {
@@ -47,6 +47,19 @@ async function main() {
     let main_locators = []
     let main_time_signatures = []
     let main_ends = []
+
+    // Extract Start Locators from Template
+    let t_data = fs.readFileSync(output_template)
+    t_data = await zlib.unzipSync(t_data)
+
+    let t_parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: false, explicitCharkey: true })
+    let t_xml_obj = await t_parser.parseStringPromise(t_data.toString())
+
+    let t_locators = t_xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"].map(a => {
+        return Number(a['Time']['$']['Value'])
+    }).sort((a,b) => a-b)
+
+    console.log(t_locators)
 
     // Extract Metadata
     for (let i = 0; i < input_als.length; i++) {
@@ -148,10 +161,10 @@ async function main() {
                 largest_loc_id = current_locator['$']["Id"]
             }
 
-            current_locator["Time"]['$']["Value"] = Number(current_locator["Time"]['$']["Value"]) + current_offset
+            current_locator["Time"]['$']["Value"] = Number(current_locator["Time"]['$']["Value"]) + t_locators[i] //current_offset
             final_locators.push(current_locator)
         }
-        current_offset += Number(main_ends[i]) + Number(TRACK_OFFSET)
+        //current_offset += t_locators[i]//Number(main_ends[i]) + Number(TRACK_OFFSET)
         //console.log(current_offset)
         final_locators[lowest_index]["Name"]["$"]["Value"] = `START ${path.basename(input_als[i])}: ${final_locators[lowest_index]["Name"]["$"]["Value"]}`
     }
@@ -163,9 +176,12 @@ async function main() {
 
     //console.log(main_time_signatures)
 
+    //main_time_signatures[2] = null
+
     for (let i = 0; i < main_time_signatures.length; i++) {
         let signatures = main_time_signatures[i]
-        if (!signatures)
+
+        if (!signatures || !signatures.length)
             continue
         for (let j = 0; j < main_time_signatures[i].length; j++) {
             let current_signature = signatures[j]
@@ -184,15 +200,15 @@ async function main() {
                 largest_tim_id = Number(current_signature['$']["Id"])
             }
 
-            current_signature['$']["Time"] = Number(current_signature["$"]["Time"]) + current_offset
+            current_signature['$']["Time"] = Number(current_signature["$"]["Time"]) + t_locators[i]//current_offset
 
             if (Number(current_signature['$']["Time"]) < 0) {
-                current_signature['$']["Time"] = current_offset
+                current_signature['$']["Time"] = t_locators[i]
             }
 
             final_time_signatures.push(current_signature)
         }
-        current_offset += Number(main_ends[i]) + Number(TRACK_OFFSET)
+        //current_offset += Number(main_ends[i]) + Number(TRACK_OFFSET)
         //console.log(current_offset)
     }
     //console.log(final_time_signatures)
@@ -217,6 +233,8 @@ async function main() {
     if (!xml_obj["Ableton"]["LiveSet"]["Locators"]) {
         xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"] = {}
     }
+
+    //console.log(xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"])
 
     xml_obj["Ableton"]["LiveSet"]["Locators"]["Locators"]["Locator"] = final_locators
 

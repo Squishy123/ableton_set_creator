@@ -24,3 +24,8 @@ npm i
 npm start
 ```
 
+### For manual insertion mode
+```
+npm run insert
+```
+
