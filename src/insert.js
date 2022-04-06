@@ -29,7 +29,9 @@ for (let i = 0; i < input_als.length; i++) {
 let output_als = "mix.als"
 
 // output template
-let output_template = path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
+let output_template = path.join(`${__dirname}`, "../", "template.als")//"/templates/main_template_project/template.als")
+
+//input_als.push(output_template)
 
 // check exists
 /*
@@ -62,7 +64,7 @@ async function main() {
         return Number(a['Time']['$']['Value'])
     }).sort((a, b) => a - b)
 
-    console.log(t_locators)
+    //console.log(t_locators)
 
     // Extract Metadata
     for (let i = 0; i < input_als.length; i++) {
@@ -96,11 +98,6 @@ async function main() {
         let tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"]
         let midi_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["MidiTrack"]
         let return_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["ReturnTrack"]
-
-
-
-        let taken_track_ids = 0
-
 
         let end = 0
 
@@ -141,47 +138,49 @@ async function main() {
         main_ends.push(end)
 
         let taken_clip_ids = 0
+        let taken_track_ids = 0
 
-        for (let t = 0; t < tracks.length; t++) {
-            let t_name = tracks[t]["Name"]["EffectiveName"]["$"]["Value"]
-            let sample_clips = tracks[t]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
+        if (tracks)
+            for (let t = 0; t < tracks.length; t++) {
+                let t_name = tracks[t]["Name"]["EffectiveName"]["$"]["Value"]
+                let sample_clips = tracks[t]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
 
-            //main_tracks.push(tracks[t])
-            //continue
-            //console.log(sample_clips)
-            if (sample_clips.length) {
-                for (let s = 0; s < sample_clips.length; s++) {
-                    sample_clips[s]["$"]["Id"] = taken_clip_ids
+                //main_tracks.push(tracks[t])
+                //continue
+                //console.log(sample_clips)
+                if (sample_clips.length) {
+                    for (let s = 0; s < sample_clips.length; s++) {
+                        sample_clips[s]["$"]["Id"] = taken_clip_ids
+                        taken_clip_ids += 1
+                    }
+                } else {
+                    sample_clips["$"]["Id"] = taken_clip_ids
                     taken_clip_ids += 1
+                    //console.log(sample_clips["$"]["Id"])
                 }
-            } else {
-                sample_clips["$"]["Id"] = taken_clip_ids
-                taken_clip_ids += 1
-                //console.log(sample_clips["$"]["Id"])
-            }
 
 
-            if (!main_clips[t_name]) {
-                console.log(tracks[t]["$"]["Id"])
-                if (sample_clips.length) {
-                    main_clips[t_name] = sample_clips
+                if (!main_clips[t_name]) {
+                    //console.log(tracks[t]["$"]["Id"])
+                    if (sample_clips.length) {
+                        main_clips[t_name] = sample_clips
+                    } else {
+                        main_clips[t_name] = [sample_clips]
+                    }
+                    tracks[t]["$"]["Id"] = taken_track_ids
+                    taken_track_ids += 1
+                    main_tracks.push(tracks[t])
                 } else {
-                    main_clips[t_name] = [sample_clips]
+                    //console.log(tracks[t]["$"]["Id"])
+                    if (sample_clips.length) {
+                        main_clips[t_name] = main_clips[t_name].concat(sample_clips)
+                    } else {
+                        main_clips[t_name].push(sample_clips)
+                    }
+                    tracks[t]["$"]["Id"] = taken_track_ids
+                    taken_track_ids += 1
                 }
-                tracks[t]["$"]["Id"] = taken_track_ids
-                taken_track_ids+=1
-                main_tracks.push(tracks[t])
-            } else {
-                //console.log(tracks[t]["$"]["Id"])
-                if (sample_clips.length) {
-                    main_clips[t_name] = main_clips[t_name].concat(sample_clips)
-                } else {
-                    main_clips[t_name].push(sample_clips)
-                }
-                tracks[t]["$"]["Id"] = taken_track_ids
-                taken_track_ids += 1
             }
-        }
     }
 
     //console.log(main_clips)
@@ -324,11 +323,13 @@ async function main() {
         main_tracks[m]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"] = main_clips[name]
     }
 
-    xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = main_tracks
+    //\xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = main_tracks
     //main_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] 
 
     //    fs.writeFileSync("test.json", JSON.stringify({ "Root": main_tracks }))
-
+    if (!xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].length) {
+        xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = [xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"]]
+    }
     xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].concat(final_time_signatures)
     let xml = new xml2js.Builder({ headless: false, explicitArray: false, mergeAttrs: false, explicitCharkey: true }).buildObject(xml_obj)
     out_data = await zlib.gzipSync(xml)
