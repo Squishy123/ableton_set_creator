@@ -52,7 +52,7 @@ async function main() {
     let main_ends = []
     let main_tracks = []
     let main_clips = {}
-    let taken_tracks = 0
+    let taken_tracks = 4
     let taken_clips = 0
 
     // Extract Start Locators from Template
@@ -161,7 +161,7 @@ async function main() {
                 main_tracks = main_tracks.concat(tracks)
             } else {
                 tracks["$"]["Id"] = taken_tracks
-                taken_track++
+                taken_tracks++
                 let clips = tracks["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
                 if (clips) {
                     if (clips.length) {
@@ -367,7 +367,7 @@ async function main() {
 
     //console.log(main_tracks)
 
-    xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = [main_tracks[0], main_tracks[10]]
+    xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = main_tracks.slice(0,9)//[main_tracks[0], main_tracks[1], main_tracks[2], main_tracks[3], main_tracks[4], main_tracks[5], main_tracks[6]]
     //main_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] 
 
     //    fs.writeFileSync("test.json", JSON.stringify({ "Root": main_tracks }))
