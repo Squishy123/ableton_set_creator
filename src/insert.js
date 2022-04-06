@@ -10,7 +10,7 @@ const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_projec
 // songs to pass in (input_filename, input_filename, input_filename)
 //let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
 let input_als = [
-    "C:/Users/chris/Downloads/CS-King of Kings-D.als"
+    "C:/Users/chris/Desktop/3-27-2022/3-27-2022 Project/3-27-2022.als"
     //    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
     //   "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
     //  "C:/Users/Chris/Desktop/projects/ableton_set_creator/Come-to-the-altar-D+.als",
@@ -48,6 +48,8 @@ async function main() {
     let main_locators = []
     let main_time_signatures = []
     let main_ends = []
+    let main_tracks = []
+    let main_clips = {}
 
     // Extract Start Locators from Template
     let t_data = fs.readFileSync(output_template)
@@ -86,12 +88,19 @@ async function main() {
         let envs = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"]
 
         for (let i = 0; i < envs.length; i++) {
-            if (envs[i]["Automation"]["Events"]["EnumEvent"])   
+            if (envs[i]["Automation"]["Events"]["EnumEvent"])
                 time_signatures = time_signatures.concat(envs[i]["Automation"]["Events"]["EnumEvent"])
         }
 
         // end loc
         let tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"]
+        let midi_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["MidiTrack"]
+        let return_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["ReturnTrack"]
+
+
+
+        let taken_track_ids = 0
+
 
         let end = 0
 
@@ -130,7 +139,53 @@ async function main() {
         main_locators.push(locators)
         main_time_signatures.push(time_signatures)
         main_ends.push(end)
+
+        let taken_clip_ids = 0
+
+        for (let t = 0; t < tracks.length; t++) {
+            let t_name = tracks[t]["Name"]["EffectiveName"]["$"]["Value"]
+            let sample_clips = tracks[t]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
+
+            //main_tracks.push(tracks[t])
+            //continue
+            //console.log(sample_clips)
+            if (sample_clips.length) {
+                for (let s = 0; s < sample_clips.length; s++) {
+                    sample_clips[s]["$"]["Id"] = taken_clip_ids
+                    taken_clip_ids += 1
+                }
+            } else {
+                sample_clips["$"]["Id"] = taken_clip_ids
+                taken_clip_ids += 1
+                //console.log(sample_clips["$"]["Id"])
+            }
+
+
+            if (!main_clips[t_name]) {
+                console.log(tracks[t]["$"]["Id"])
+                if (sample_clips.length) {
+                    main_clips[t_name] = sample_clips
+                } else {
+                    main_clips[t_name] = [sample_clips]
+                }
+                tracks[t]["$"]["Id"] = taken_track_ids
+                taken_track_ids+=1
+                main_tracks.push(tracks[t])
+            } else {
+                //console.log(tracks[t]["$"]["Id"])
+                if (sample_clips.length) {
+                    main_clips[t_name] = main_clips[t_name].concat(sample_clips)
+                } else {
+                    main_clips[t_name].push(sample_clips)
+                }
+                tracks[t]["$"]["Id"] = taken_track_ids
+                taken_track_ids += 1
+            }
+        }
     }
+
+    //console.log(main_clips)
+    // exit()
 
     // Concat Metadata
 
@@ -260,10 +315,24 @@ async function main() {
             ]
         }
     }
-    xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] =  xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].concat(final_time_signatures)
+
+    for (let m = 0; m < main_tracks.length; m++) {
+        let name = main_tracks[m]["Name"]["EffectiveName"]["$"]["Value"]
+        //console.log(main_clips[name])
+        //console.log(main_clips)
+
+        main_tracks[m]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"] = main_clips[name]
+    }
+
+    xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = main_tracks
+    //main_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] 
+
+    //    fs.writeFileSync("test.json", JSON.stringify({ "Root": main_tracks }))
+
+    xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].concat(final_time_signatures)
     let xml = new xml2js.Builder({ headless: false, explicitArray: false, mergeAttrs: false, explicitCharkey: true }).buildObject(xml_obj)
     out_data = await zlib.gzipSync(xml)
-    //console.log(xml)
+    //console.log(xml)  
     fs.writeFileSync(output_als, out_data)
 }
 
