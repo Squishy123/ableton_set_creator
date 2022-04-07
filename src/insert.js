@@ -10,11 +10,11 @@ const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_projec
 // songs to pass in (input_filename, input_filename, input_filename)
 //let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
 let input_als = [
-    "C:/Users/chris/Desktop/3-27-2022/3-27-2022 Project/3-27-2022.als"
-    //    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
-    //   "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
-    //  "C:/Users/Chris/Desktop/projects/ableton_set_creator/Come-to-the-altar-D+.als",
-    // "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Desert-Song-D-110.00bpm.als"
+    //"C:/Users/chris/Desktop/3-27-2022/3-27-2022 Project/3-27-2022.als"
+    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
+    //"C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
+    //"C:/Users/Chris/Desktop/projects/ableton_set_creator/Come-to-the-altar-D+.als",
+    //"C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Desert-Song-D-110.00bpm.als"
 ]
 
 // check exists
@@ -31,7 +31,7 @@ let output_als = "mix.als"
 // output template
 let output_template = path.join(`${__dirname}`, "../", "template.als")//"/templates/main_template_project/template.als")
 
-//input_als.push(output_template)
+input_als.push(output_template)
 
 // check exists
 /*
@@ -52,8 +52,11 @@ async function main() {
     let main_ends = []
     let main_tracks = []
     let main_clips = {}
-    let taken_tracks = 4
+    let taken_tracks = 0
+    let taken_tracks_id = {"0": 1}
     let taken_clips = 0
+    let main_midi_tracks = []
+    let main_return_tracks = []
 
     // Extract Start Locators from Template
     let t_data = fs.readFileSync(output_template)
@@ -71,6 +74,7 @@ async function main() {
     // Extract Metadata
     for (let i = 0; i < input_als.length; i++) {
         console.log(input_als[i])
+        console.log(taken_tracks)
 
         // decompress als
         let data = fs.readFileSync(input_als[i])
@@ -139,11 +143,71 @@ async function main() {
         main_time_signatures.push(time_signatures)
         main_ends.push(end)
 
+        console.log(taken_tracks_id)
+
+        if (midi_tracks) {
+            if (midi_tracks.length) {
+                for (let t = 0; t < midi_tracks.length; t++) {
+                    if (taken_tracks_id[midi_tracks[t]["$"]["Id"]]) {
+                        midi_tracks[t]["$"]["Id"] = Math.max(Number(Object.keys(taken_tracks_id))) + 1
+                        taken_tracks_id[midi_tracks[t]["$"]["Id"]] = 1
+                        //taken_tracks++
+                    } else {
+                        taken_tracks_id[midi_tracks[t]["$"]["Id"]] = 1
+                    }
+                }
+
+                main_midi_tracks = main_midi_tracks.concat(midi_tracks)
+            } else {
+                if (taken_tracks_id[midi_tracks["$"]["Id"]]) {
+                    midi_tracks["$"]["Id"] = Math.max(Number(Object.keys(taken_tracks_id))) + 1
+                    ///taken_tracks = Math.max(Number(Object.keys(taken_tracks_id))) 
+                    taken_tracks_id[midi_tracks["$"]["Id"]] = 1
+                } else {
+                    taken_tracks_id[midi_tracks["$"]["Id"]] = 1
+                }
+            }
+            main_midi_tracks.push(midi_tracks)
+        }
+
+       // console.log(tracks)
+
+        if (return_tracks) {
+            if (return_tracks.length) {
+                for (let t = 0; t < return_tracks.length; t++) {
+                    if (taken_tracks_id[return_tracks[t]["$"]["Id"]]) {
+                        return_tracks[t]["$"]["Id"] = Math.max(Number(Object.keys(taken_tracks_id))) + 1
+                        taken_tracks_id[return_tracks[t]["$"]["Id"]] = 1
+                        //taken_tracks++
+                    } else {
+                        taken_tracks_id[return_tracks[t]["$"]["Id"]] = 1
+                    }
+                }
+                main_return_tracks = main_return_tracks.concat(return_tracks)
+            } else {
+                if (taken_tracks_id[main_return_tracks["$"]["Id"]]) {
+                    main_return_tracks["$"]["Id"] = Math.max(Number(Object.keys(taken_tracks_id))) + 1
+                    taken_tracks_id[return_tracks["$"]["Id"]] = 1
+                    
+                    //taken_tracks++
+                } else {
+                    taken_tracks_id[main_return_tracks["$"]["Id"]] = 1
+                }
+                main_return_tracks.push(return_tracks)
+            }
+        }
+
         if (tracks) {
             if (tracks.length) {
                 for (let t = 0; t < tracks.length; t++) {
-                    tracks[t]["$"]["Id"] = taken_tracks
-                    taken_tracks++
+                    console.log(tracks[t]["$"]["Id"])
+                    if (taken_tracks_id[tracks[t]["$"]["Id"]]) {
+                        tracks[t]["$"]["Id"] = Math.max(Number(Object.keys(taken_tracks_id))) + 1
+                        taken_tracks_id[tracks[t]["$"]["Id"]] = 1
+                        //taken_tracks++
+                    } else {
+                        taken_tracks_id[tracks[t]["$"]["Id"]] = 1
+                    }
 
                     let clips = tracks[t]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
                     if (clips) {
@@ -160,8 +224,15 @@ async function main() {
                 }
                 main_tracks = main_tracks.concat(tracks)
             } else {
-                tracks["$"]["Id"] = taken_tracks
-                taken_tracks++
+                console.log(tracks["$"]["Id"])
+                if (taken_tracks_id[tracks["$"]["Id"]]) {
+                    tracks["$"]["Id"] = Math.max(Number(Object.keys(taken_tracks_id))) + 1
+                    taken_tracks_id[tracks["$"]["Id"]] = 1
+                    //taken_tracks++
+                } else {
+                    taken_tracks_id[tracks["$"]["Id"]] = 1
+                }
+
                 let clips = tracks["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
                 if (clips) {
                     if (clips.length) {
@@ -177,53 +248,8 @@ async function main() {
                 main_tracks.push(tracks)
             }
         }
-        console.log(taken_clips)
-
-        let taken_clip_ids = 0
-        let taken_track_ids = 0
-
-        if (tracks && 1 == 4)
-            for (let t = 0; t < tracks.length; t++) {
-                let t_name = tracks[t]["Name"]["EffectiveName"]["$"]["Value"]
-                let sample_clips = tracks[t]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"]
-
-                //main_tracks.push(tracks[t])
-                //continue
-                //console.log(sample_clips)
-                if (sample_clips.length) {
-                    for (let s = 0; s < sample_clips.length; s++) {
-                        sample_clips[s]["$"]["Id"] = taken_clip_ids
-                        taken_clip_ids += 1
-                    }
-                } else {
-                    sample_clips["$"]["Id"] = taken_clip_ids
-                    taken_clip_ids += 1
-                    //console.log(sample_clips["$"]["Id"])
-                }
-
-
-                if (!main_clips[t_name]) {
-                    //console.log(tracks[t]["$"]["Id"])
-                    if (sample_clips.length) {
-                        main_clips[t_name] = sample_clips
-                    } else {
-                        main_clips[t_name] = [sample_clips]
-                    }
-                    tracks[t]["$"]["Id"] = taken_track_ids
-                    taken_track_ids += 1
-                    main_tracks.push(tracks[t])
-                } else {
-                    //console.log(tracks[t]["$"]["Id"])
-                    if (sample_clips.length) {
-                        main_clips[t_name] = main_clips[t_name].concat(sample_clips)
-                    } else {
-                        main_clips[t_name].push(sample_clips)
-                    }
-                    tracks[t]["$"]["Id"] = taken_track_ids
-                    taken_track_ids += 1
-                }
-            }
     }
+    console.log(taken_tracks_id)
 
     //console.log(main_clips)
     // exit()
@@ -324,7 +350,7 @@ async function main() {
     data = await zlib.unzipSync(data)
     /*
     const obj = convert(data.toString(), {format: "object"})
-
+ 
     const doc = create(xml_obj)
     const xml_ = doc.end({prettyPrint: true})
     console.log(xml_)
@@ -356,18 +382,22 @@ async function main() {
             ]
         }
     }
-
+    /*
     for (let m = 0; m < main_tracks.length; m++) {
         let name = main_tracks[m]["Name"]["EffectiveName"]["$"]["Value"]
         //console.log(main_clips[name])
         // console.log(main_tracks[m]["$"]["Id"])
-
+ 
         //main_tracks[m]["DeviceChain"]["MainSequencer"]["Sample"]["ArrangerAutomation"]["Events"]["AudioClip"] = main_clips[name]
-    }
+    }*/
 
     //console.log(main_tracks)
 
-    xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = main_tracks.slice(0,9)//[main_tracks[0], main_tracks[1], main_tracks[2], main_tracks[3], main_tracks[4], main_tracks[5], main_tracks[6]]
+    xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] = main_tracks
+    //xml_obj["Ableton"]["LiveSet"]["Tracks"]["MidiTrack"] = main_midi_tracks
+
+    //console.log(main_midi_tracks)
+    xml_obj["Ableton"]["LiveSet"]["Tracks"]["ReturnTrack"] = main_return_tracks
     //main_tracks = xml_obj["Ableton"]["LiveSet"]["Tracks"]["AudioTrack"] 
 
     //    fs.writeFileSync("test.json", JSON.stringify({ "Root": main_tracks }))
