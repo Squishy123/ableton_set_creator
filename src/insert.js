@@ -10,7 +10,9 @@ const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_projec
 // songs to pass in (input_filename, input_filename, input_filename)
 //let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
 let input_als = [
-    "C:/Users/chris/Downloads/CS-King of Kings-D.als"
+    "C:/Users/Chris/Downloads/thousand_hal.als",
+    "C:/Users/Chris/Downloads/graves.als"
+    //"C:/Users/chris/Downloads/CS-King of Kings-D.als"
     //    "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
     //   "C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
     //  "C:/Users/Chris/Desktop/projects/ableton_set_creator/Come-to-the-altar-D+.als",
@@ -26,10 +28,10 @@ for (let i = 0; i < input_als.length; i++) {
 }
 
 // name of exported file
-let output_als = "mix.als"
+let output_als = "april_10.als"
 
 // output template
-let output_template = path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
+let output_template = "C:/Users/Chris/Downloads/april_10.als"//path.join(`${__dirname}`, "../", "/templates/main_template_project/template.als")
 
 // check exists
 /*
@@ -86,7 +88,7 @@ async function main() {
         let envs = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"]
 
         for (let i = 0; i < envs.length; i++) {
-            if (envs[i]["Automation"]["Events"]["EnumEvent"])   
+            if (envs[i]["Automation"]["Events"]["EnumEvent"])
                 time_signatures = time_signatures.concat(envs[i]["Automation"]["Events"]["EnumEvent"])
         }
 
@@ -260,7 +262,25 @@ async function main() {
             ]
         }
     }
-    xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] =  xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].concat(final_time_signatures)
+
+    if (xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"].length) {
+        let arr = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"]
+
+        for (let a = 0; a < arr.length; a++) {
+            arr[a]["$"]["Id"] = largest_tim_id + 1
+            largest_tim_id++
+        }
+
+        xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = arr.concat(final_time_signatures)
+    } else {
+        let arr = xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"]
+        arr["$"]["Id"] = largest_tim_id + 1
+        largest_tim_id++
+        xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"] = [arr].concat(final_time_signatures)
+
+    }
+
+    //console.log(xml_obj["Ableton"]["LiveSet"]["MasterTrack"]["AutomationEnvelopes"]["Envelopes"]["AutomationEnvelope"][0]["Automation"]["Events"]["EnumEvent"])
     let xml = new xml2js.Builder({ headless: false, explicitArray: false, mergeAttrs: false, explicitCharkey: true }).buildObject(xml_obj)
     out_data = await zlib.gzipSync(xml)
     //console.log(xml)
