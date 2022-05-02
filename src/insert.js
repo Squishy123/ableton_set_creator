@@ -11,7 +11,7 @@ const LOOP_ALS = path.join(`${__dirname}`, "../", "/templates/sample_loop_projec
 //let input_als = [LOOP_ALS, LOOP_ALS, "C:/Users/Chris/Desktop/projects/ableton_set_creator/spirit_of_the_living_god.als", "C:/Users/Chris/Desktop/projects/ableton_set_creator/build_my_life_d.als",]
 let input_als = [
     "C:/Users/Chris/Desktop/worship_multitracks/Spirit Of The Living God-D-67bpm Project/Spirit Of The Living God-D-67bpm.als",
-    //"C:/Users/Chris/Desktop/worship_multitracks/Build My Life - D - 72bpm Project/Build My Life - D - 72bpm.als"
+    "C:/Users/Chris/Desktop/worship_multitracks/Build My Life - D - 72bpm Project/Build My Life - D - 72bpm.als"
     //"C:/Users/chris/Desktop/3-27-2022/3-27-2022 Project/3-27-2022.als"
     //"C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-Holy-Is-The-Lord-D-84.00bpm.als",
     //"C:/Users/Chris/Desktop/projects/ableton_set_creator/CS-King-of-Kings-D.als",
@@ -55,7 +55,7 @@ async function main() {
     let main_tracks = []
     let main_clips = {}
     let taken_tracks = 0
-    let taken_tracks_id = {"0": 1}
+    let taken_tracks_id = {"1": 1, "": 1}
     let taken_clips = 0
     let main_midi_tracks = []
     let main_return_tracks = []
